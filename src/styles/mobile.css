@@ -1227,9 +1227,37 @@
 
 /* ===== app-shell 3.5：購物車（± 數量、左滑移除、底部固定合計） ===== */
 /* 桌面版：新元素預設隱藏，版面不變 */
-[data-cart-stepper],
-[data-cart-del] {
+[data-cart-del],
+[data-cart-qtytext] {
   display: none;
+}
+[data-cart-stepper] {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+[data-cart-stepper] form {
+  margin: 0;
+}
+[data-cart-stepper] button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  background: #fff;
+  line-height: 1;
+  cursor: pointer;
+}
+[data-cart-stepper] button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+[data-cart-stepper] [data-cart-qty] {
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
 }
 
 @media (max-width: 767.98px) {

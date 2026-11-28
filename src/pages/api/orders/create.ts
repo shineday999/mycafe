@@ -74,7 +74,7 @@ export const POST: APIRoute = async (ctx) => {
   // 商品名稱 / 圖片(email 用)
   const detailMap = new Map<
     string,
-    { name: string | null; slug: string; image?: string }
+    { name: string | null; slug: string; image?: string | undefined }
   >();
   if (skuList.length > 0) {
     const ph2 = skuList.map(() => "?").join(",");

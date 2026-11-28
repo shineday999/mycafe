@@ -25,11 +25,7 @@ describe("sendEmailSafely", () => {
       "fetch",
       vi.fn(async () => new Response("denied", { status: 403 })),
     );
-    const r = await sendEmailSafely(
-      { CF_API_TOKEN: "t", CF_ACCOUNT_ID: "a" },
-      params,
-      "test",
-    );
+    const r = await sendEmailSafely({ RESEND_API_KEY: "t" }, params, "test");
     expect(r).toEqual({ ok: false, error: "cf_email_403" });
     expect(err).toHaveBeenCalledWith(expect.stringContaining("cf_email_403"));
   });
@@ -42,11 +38,7 @@ describe("sendEmailSafely", () => {
         throw new Error("boom");
       }),
     );
-    const r = await sendEmailSafely(
-      { CF_API_TOKEN: "t", CF_ACCOUNT_ID: "a" },
-      params,
-      "test",
-    );
+    const r = await sendEmailSafely({ RESEND_API_KEY: "t" }, params, "test");
     expect(r).toEqual({ ok: false, error: "exception" });
   });
 
@@ -57,7 +49,7 @@ describe("sendEmailSafely", () => {
       vi.fn(() => new Promise(() => {})),
     );
     const r = await sendEmailSafely(
-      { CF_API_TOKEN: "t", CF_ACCOUNT_ID: "a" },
+      { RESEND_API_KEY: "t" },
       params,
       "test",
       20,
@@ -75,11 +67,7 @@ describe("sendEmailSafely", () => {
           }),
       ),
     );
-    const r = await sendEmailSafely(
-      { CF_API_TOKEN: "t", CF_ACCOUNT_ID: "a" },
-      params,
-      "test",
-    );
+    const r = await sendEmailSafely({ RESEND_API_KEY: "t" }, params, "test");
     expect(r).toEqual({ ok: true, id: "m1" });
   });
 });

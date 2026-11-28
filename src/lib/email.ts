@@ -113,11 +113,11 @@ export function emailEnvFromContext(): EmailEnv {
 
 export interface OrderEmailRow {
   name: string;
-  sku?: string;
+  sku?: string | undefined;
   qty: number;
   unit: string;
   line: string;
-  image?: string;
+  image?: string | undefined;
 }
 
 export function orderConfirmationEmail(

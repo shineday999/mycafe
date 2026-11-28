@@ -264,4 +264,46 @@ const totalDisplay = formatPrice(subtotalCents, "TWD", locale);
       )
     }
   </div>
+
+  <script is:inline>
+    (function () {
+      var KEY = "mycafe_checkout_draft";
+      var form = document.querySelector("form[data-checkout]");
+      if (!form) return;
+      var fields = form.querySelectorAll(
+        "input[name], textarea[name], select[name]",
+      );
+      function save() {
+        try {
+          var d = {};
+          fields.forEach(function (el) {
+            if (el.type !== "hidden") d[el.name] = el.value;
+          });
+          sessionStorage.setItem(KEY, JSON.stringify(d));
+        } catch {}
+      }
+      try {
+        var raw = sessionStorage.getItem(KEY);
+        if (raw) {
+          var d = JSON.parse(raw);
+          fields.forEach(function (el) {
+            if (el.type !== "hidden" && d[el.name] != null && !el.value)
+              el.value = d[el.name];
+          });
+        }
+      } catch {}
+      form.addEventListener("input", save);
+      form.addEventListener("change", save);
+      form.addEventListener("submit", function (e) {
+        var sub = e.submitter;
+        if (sub && sub.hasAttribute("formaction")) {
+          save();
+        } else {
+          try {
+            sessionStorage.removeItem(KEY);
+          } catch {}
+        }
+      });
+    })();
+  </script>
 </Layout>

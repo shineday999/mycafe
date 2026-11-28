@@ -466,3 +466,40 @@ html {
 body {
   padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)) !important;
 }
+
+/* === 首頁 hero 美化 === */
+.hero-scrim {
+  background:
+    linear-gradient(90deg, rgba(20, 12, 6, 0.78) 0%, rgba(20, 12, 6, 0.5) 38%, rgba(20, 12, 6, 0.08) 70%, rgba(20, 12, 6, 0) 100%),
+    linear-gradient(0deg, rgba(20, 12, 6, 0.45) 0%, rgba(20, 12, 6, 0) 30%);
+}
+@media (max-width: 767.98px) {
+  .hero-scrim {
+    background: rgba(20, 12, 6, 0.55);
+  }
+}
+.hero-text p {
+  text-wrap: pretty;
+}
+main [data-home-hero] .hero-text > p:first-child {
+  color: #ffe0c2;
+}
+/* 桌面版首頁:頁首浮在照片上,未捲動時透明白字,捲動後恢復毛玻璃 */
+@media (min-width: 768px) {
+  body:has([data-home-hero]) header[data-header] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  body:has([data-home-hero]) header[data-header]:not([data-scrolled="true"]) {
+    background: linear-gradient(to bottom, rgba(20, 12, 6, 0.5), rgba(20, 12, 6, 0)) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-bottom-color: transparent !important;
+  }
+  body:has([data-home-hero]) header[data-header]:not([data-scrolled="true"]) a,
+  body:has([data-home-hero]) header[data-header]:not([data-scrolled="true"]) button {
+    color: #fff;
+  }
+}

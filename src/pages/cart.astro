@@ -68,6 +68,13 @@ function firstImage(json: unknown): string | undefined {
   }
 }
 
+const stockLabels: Record<string, string> = {
+  "zh-Hant": "最多可訂",
+  en: "Max",
+  "ms-MY": "Maks",
+  "id-ID": "Maks",
+};
+const stockLabel = stockLabels[locale as string] ?? "Max";
 void locale;
 void t;
 ---
@@ -194,6 +201,11 @@ void t;
                             +
                           </button>
                         </form>
+                        <span class="text-xs text-text-muted ml-1">
+                          {Number.isFinite(stock)
+                            ? `${stockLabel} ${stock}`
+                            : null}
+                        </span>
                       </div>
                     </div>
                   </div>

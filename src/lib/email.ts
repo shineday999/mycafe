@@ -1,4 +1,4 @@
-// Email integration — Cloudflare Email Service API
+// Email integration — Resend API
 // 計畫書 Phase 5+ 改用 Cloudflare Email Service(原本是 Resend,但改用自有網域 0061qwen.cc.cd 的信箱)
 // 需要在 CF Dashboard → Email → Sending 驗證 0061qwen.cc.cd 域 + 設 DKIM
 // F-05: universal safe() HTML escape for email templates
@@ -6,8 +6,7 @@
 import { env } from "cloudflare:workers";
 
 interface EmailEnv {
-  CF_API_TOKEN?: string;
-  CF_ACCOUNT_ID?: string;
+  RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
   EMAIL_REPLY_TO?: string;
 }
@@ -42,23 +41,22 @@ export async function sendEmail(
   env: EmailEnv,
   params: EmailParams,
 ): Promise<EmailResult> {
-  if (!env.CF_API_TOKEN || !env.CF_ACCOUNT_ID) {
-    console.warn("[email] CF_API_TOKEN / CF_ACCOUNT_ID not set, skipping send");
+  if (!env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set, skipping send");
     console.log(`[email] To: ${params.to}`);
     console.log(`[email] Subject: ${params.subject}`);
     return { ok: false, error: "no_credentials" };
   }
 
-  const url = `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/email/sending`;
-  const res = await fetch(url, {
+  const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${env.CF_API_TOKEN}`,
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
     },
     body: JSON.stringify({
       from: env.EMAIL_FROM ?? DEFAULT_FROM,
-      to: params.to,
+      to: [params.to],
       subject: params.subject,
       html: params.html,
       text: params.text,
@@ -68,11 +66,11 @@ export async function sendEmail(
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    console.error(`[email] CF Email Service error ${res.status}: ${body}`);
-    return { ok: false, error: `cf_email_${res.status}` };
+    console.error(`[email] Resend error ${res.status}: ${body}`);
+    return { ok: false, error: `resend_${res.status}` };
   }
-  const data = (await res.json()) as { result?: { id?: string } };
-  return data.result?.id ? { ok: true, id: data.result.id } : { ok: true };
+  const data = (await res.json()) as { id?: string };
+  return data.id ? { ok: true, id: data.id } : { ok: true };
 }
 
 /**

@@ -524,3 +524,96 @@ header[data-header] .locale-menu button[aria-selected="true"] {
   color: #8a4b1f !important;
   font-weight: 600;
 }
+
+/* === 語言選單 / 購物車 hover 動態效果 === */
+@keyframes locale-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes cart-badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.locale-menu {
+  transform-origin: top right;
+  animation: locale-menu-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.locale-menu button {
+  position: relative;
+  transition:
+    background-color 0.2s ease,
+    padding-left 0.2s ease,
+    color 0.2s ease;
+}
+.locale-menu button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #8a4b1f;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
+}
+.locale-menu button:hover,
+.locale-menu button:focus-visible {
+  background-color: rgba(138, 75, 31, 0.08);
+  padding-left: 1.5rem;
+}
+.locale-menu button:hover::before,
+.locale-menu button:focus-visible::before {
+  transform: scaleY(1);
+}
+.locale-menu button svg {
+  transition: transform 0.2s ease;
+}
+.locale-menu button:hover svg {
+  transform: scale(1.2);
+}
+header[data-header] a[aria-label][href$="/cart"] {
+  transition: transform 0.2s ease;
+}
+header[data-header] a[aria-label][href$="/cart"]:hover {
+  transform: translateY(-2px);
+}
+header[data-header] a[aria-label][href$="/cart"]:hover > span {
+  animation: cart-badge-pop 0.35s ease;
+}
+header[data-header] button[aria-haspopup="listbox"] {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+header[data-header] button[aria-haspopup="listbox"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(50, 34, 22, 0.15);
+}
+@media (prefers-reduced-motion: reduce) {
+  .locale-menu,
+  .locale-menu button,
+  .locale-menu button::before,
+  .locale-menu button svg,
+  header[data-header] a[aria-label][href$="/cart"],
+  header[data-header] a[aria-label][href$="/cart"] > span,
+  header[data-header] button[aria-haspopup="listbox"] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -1,11 +1,13 @@
 import type { APIRoute } from "astro";
 import { getDB, genId } from "../../../lib/db";
 import { readCart } from "../../../lib/cart";
+import { formatPrice } from "../../../lib/format";
 import {
   safe,
   sendEmailSafely,
   emailEnvFromContext,
   orderConfirmationEmail,
+  type OrderEmailRow,
 } from "../../../lib/email";
 
 export const POST: APIRoute = async (ctx) => {
@@ -69,6 +71,76 @@ export const POST: APIRoute = async (ctx) => {
       if (q > (stockMap.get(sku) ?? 0))
         return new Response(`Insufficient stock for ${sku}.`, { status: 400 });
   }
+  // 商品名稱 / 圖片(email 用)
+  const detailMap = new Map<
+    string,
+    { name: string | null; slug: string; image?: string }
+  >();
+  if (skuList.length > 0) {
+    const ph2 = skuList.map(() => "?").join(",");
+    const origin = new URL(ctx.request.url).origin;
+    const toAbs = (u?: string) =>
+      u ? (u.startsWith("/") ? origin + u : u) : undefined;
+    const firstImg = (j: unknown) => {
+      if (typeof j !== "string" || !j) return undefined;
+      try {
+        const a = JSON.parse(j) as string[];
+        return Array.isArray(a) && a.length > 0 ? a[0] : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const det = await db
+      .prepare(
+        `SELECT pv.sku, p.slug, pt.name, pv.image_urls AS vimg,
+                (SELECT pv2.image_urls FROM product_variants pv2 WHERE pv2.product_id = p.id LIMIT 1) AS pimg
+         FROM product_variants pv
+         JOIN products p ON p.id = pv.product_id
+         LEFT JOIN product_translations pt ON pt.product_id = p.id AND pt.locale = ?
+         WHERE pv.sku IN (${ph2})`,
+      )
+      .bind(locale, ...skuList)
+      .all<{
+        sku: string;
+        slug: string;
+        name: string | null;
+        vimg: string | null;
+        pimg: string | null;
+      }>();
+    for (const r of det.results ?? []) {
+      detailMap.set(r.sku, {
+        name: r.name,
+        slug: r.slug,
+        image: toAbs(firstImg(r.vimg) ?? firstImg(r.pimg)),
+      });
+    }
+  }
+
+  // 扣庫存:只在 stock >= 數量 時才扣(原子更新,避免超賣);任一項失敗就整張退回
+  const need = new Map<string, number>();
+  for (const i of items)
+    if (i.sku) need.set(i.sku, (need.get(i.sku) ?? 0) + i.qty);
+  const decremented: Array<[string, number]> = [];
+  for (const [sku, q] of need) {
+    const r = await db
+      .prepare(
+        "UPDATE product_variants SET stock = stock - ? WHERE sku = ? AND stock >= ?",
+      )
+      .bind(q, sku, q)
+      .run();
+    if (!r.meta?.changes) {
+      for (const [s2, n2] of decremented)
+        await db
+          .prepare(
+            "UPDATE product_variants SET stock = stock + ? WHERE sku = ?",
+          )
+          .bind(n2, s2)
+          .run();
+      return new Response(`Insufficient stock for ${sku}.`, { status: 400 });
+    }
+    decremented.push([sku, q]);
+  }
+
   const enrichedItems = items.map((i) => ({
     ...i,
     priceCents: i.sku ? (priceMap.get(i.sku) ?? null) : null,
@@ -112,7 +184,25 @@ export const POST: APIRoute = async (ctx) => {
 
   // 寄確認信給顧客、通知管理員。兩封一起等,寄信失敗不會讓訂單失敗(訂單已寫入資料庫)
   const itemsSummary = items.map((i) => `${i.slug} × ${i.qty}`).join(", ");
-  const template = orderConfirmationEmail(orderId, name, itemsSummary);
+  const emailRows: OrderEmailRow[] = enrichedItems.map((i) => {
+    const d = i.sku ? detailMap.get(i.sku) : undefined;
+    const unit = i.priceCents ?? 0;
+    return {
+      name: d?.name ?? d?.slug ?? i.slug,
+      sku: i.sku,
+      qty: i.qty,
+      unit: formatPrice(unit, "TWD", locale),
+      line: formatPrice(unit * i.qty, "TWD", locale),
+      image: d?.image,
+    };
+  });
+  const template = orderConfirmationEmail(
+    orderId,
+    name,
+    itemsSummary,
+    emailRows,
+    formatPrice(total, "TWD", locale),
+  );
   await Promise.all([
     sendEmailSafely(
       emailEnvFromContext(),
@@ -131,7 +221,7 @@ export const POST: APIRoute = async (ctx) => {
         to: "weider@0061qwen.cc.cd",
         subject: `[New Order] ${orderId} from ${name}`,
         // 顧客輸入的內容一律先跳脫,避免 HTML 注入到管理員的信件
-        html: `<p>${safe(name)} (${safe(email)}) placed a new order.</p><pre>${safe(JSON.stringify(items, null, 2))}</pre><p>Notes: ${safe(notes ?? "(none)")}</p>`,
+        html: `<p>${safe(name)} (${safe(email)}${phone ? ", " + safe(phone) : ""}) placed a new order.</p><p>${safe(country)} ${safe(city)} ${safe(address)} ${safe(postal)}</p>${template.html}<p>Notes: ${safe(notes ?? "(none)")}</p>`,
         replyTo: email,
       },
       "order admin notification",

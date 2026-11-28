@@ -111,26 +111,65 @@ export function emailEnvFromContext(): EmailEnv {
   return env ?? {};
 }
 
+export interface OrderEmailRow {
+  name: string;
+  sku?: string;
+  qty: number;
+  unit: string;
+  line: string;
+  image?: string;
+}
+
 export function orderConfirmationEmail(
   orderId: string,
   customerName: string,
   itemsSummary: string,
+  rows: OrderEmailRow[] = [],
+  total = "",
 ): { subject: string; html: string; text: string } {
   const subject = `預訂單確認 #${safe(orderId)}`;
+  const rowsHtml = rows
+    .map(
+      (r) => `
+      <tr>
+        <td style="padding:12px 12px 12px 0;border-bottom:1px solid #e7dfda;width:84px;vertical-align:top;">
+          ${r.image ? `<img src="${safe(r.image)}" width="72" height="72" alt="${safe(r.name)}" style="display:block;width:72px;height:72px;object-fit:cover;border-radius:8px;" />` : ""}
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #e7dfda;vertical-align:top;">
+          <div style="font-weight:600;color:#322216;">${safe(r.name)}</div>
+          ${r.sku ? `<div style="font-size:12px;color:#8A938A;margin-top:2px;">${safe(r.sku)}</div>` : ""}
+          <div style="font-size:13px;color:#5b4e44;margin-top:4px;">${safe(r.unit)} × ${r.qty}</div>
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #e7dfda;text-align:right;vertical-align:top;white-space:nowrap;color:#322216;">${safe(r.line)}</td>
+      </tr>`,
+    )
+    .join("");
+  const table = rows.length
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:16px 0;">${rowsHtml}
+        <tr>
+          <td colspan="2" style="padding:12px 0;text-align:right;color:#5b4e44;">小計</td>
+          <td style="padding:12px 0;text-align:right;font-weight:600;color:#322216;white-space:nowrap;">${safe(total)}</td>
+        </tr>
+      </table>`
+    : `<p>${safe(itemsSummary)}</p>`;
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <h2 style="color: #322216; font-family: Georgia, serif;">感謝您的預訂</h2>
       <p>${safe(customerName)} 您好,</p>
-      <p>我們已收到您的預訂單 <strong>${safe(orderId)}</strong>。</p>
-      <p>${safe(itemsSummary)}</p>
-      <p>客服將在 1-2 個工作天內與您聯絡,確認運費與付款方式。</p>
+      <p>我們已收到您的預訂單 <strong>${safe(orderId)}</strong>,內容如下:</p>
+      ${table}
+      <p>運費將於確認後另行通知。客服將在 1-2 個工作天內與您聯絡,確認運費與付款方式。</p>
       <hr style="border: none; border-top: 1px solid #e7dfda; margin: 24px 0;" />
       <p style="color: #8A938A; font-size: 12px;">
         喝三杯咖啡 · 精品咖啡 · weider@0061qwen.cc.cd
       </p>
     </div>
   `;
-  const text = `感謝您的預訂 #${orderId}。${customerName} 您好,我們已收到您的預訂單。客服將在 1-2 個工作天內與您聯絡。`;
+  const lines = rows.length
+    ? rows.map((r) => `- ${r.name} × ${r.qty}  ${r.line}`).join("\n") +
+      `\n小計 ${total}`
+    : itemsSummary;
+  const text = `感謝您的預訂 #${orderId}。${customerName} 您好,我們已收到您的預訂單:\n${lines}\n客服將在 1-2 個工作天內與您聯絡。`;
   return { subject, html, text };
 }
 

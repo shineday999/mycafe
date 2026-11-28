@@ -76,8 +76,10 @@ const nav = [
   { label: t("nav.contact"), href: localizedPath(currentLocale, "/contact") },
   { label: t("nav.about"), href: localizedPath(currentLocale, "/about") },
   {
-    label: cartCount > 0 ? `${t("nav.cart")} (${cartCount})` : t("nav.cart"),
+    label: t("nav.cart"),
     href: localizedPath(currentLocale, "/cart"),
+    cart: true,
+    count: cartCount,
   },
 ];
 ---
@@ -378,7 +380,34 @@ const nav = [
                       : "text-text-secondary hover:text-forest-700 transition-colors duration-300 link-underline"
                   }
                 >
-                  {item.label}
+                  {item.cart ? (
+                    <span class="relative inline-flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                      >
+                        <circle cx="9" cy="20" r="1.4" />
+                        <circle cx="18" cy="20" r="1.4" />
+                        <path d="M2 3h3l2.4 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6" />
+                      </svg>
+                      <span class="sr-only">{item.label}</span>
+                      {(item.count ?? 0) > 0 ? (
+                        <span class="absolute -top-2 -right-3 min-w-[18px] h-[18px] px-1 rounded-full bg-forest-700 text-bg-base text-[11px] leading-[18px] text-center font-medium">
+                          {item.count}
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : (
+                    item.label
+                  )}
                 </a>
               );
             })
@@ -471,6 +500,7 @@ const nav = [
                 data-mobile-menu-link
               >
                 {item.label}
+                {item.cart && (item.count ?? 0) > 0 ? ` (${item.count})` : ""}
               </a>
             );
           })

@@ -365,52 +365,54 @@ const nav = [
           aria-label={t("header.aria_main")}
         >
           {
-            nav.map((item) => {
-              const itemPath = item.href.startsWith(`/${currentLocale}`)
-                ? item.href.slice(`/${currentLocale}`.length) || "/"
-                : item.href;
-              const isActive = cleanPath === itemPath;
-              return (
-                <a
-                  href={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                  class={
-                    isActive
-                      ? "text-forest-700 font-medium transition-colors duration-300 link-underline"
-                      : "text-text-secondary hover:text-forest-700 transition-colors duration-300 link-underline"
-                  }
-                >
-                  {item.cart ? (
-                    <span class="relative inline-flex items-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="26"
-                        height="26"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                      >
-                        <circle cx="9" cy="20" r="1.4" />
-                        <circle cx="18" cy="20" r="1.4" />
-                        <path d="M2 3h3l2.4 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6" />
-                      </svg>
-                      <span class="sr-only">{item.label}</span>
-                      {(item.count ?? 0) > 0 ? (
-                        <span class="absolute -top-2.5 -right-3.5 min-w-[20px] h-[20px] px-1 rounded-full bg-white border-2 border-[#e60012] text-[#e60012] text-[12px] leading-[16px] text-center font-bold">
-                          {item.count}
-                        </span>
-                      ) : null}
-                    </span>
-                  ) : (
-                    item.label
-                  )}
-                </a>
-              );
-            })
+            nav
+              .filter((i) => !i.cart)
+              .map((item) => {
+                const itemPath = item.href.startsWith(`/${currentLocale}`)
+                  ? item.href.slice(`/${currentLocale}`.length) || "/"
+                  : item.href;
+                const isActive = cleanPath === itemPath;
+                return (
+                  <a
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    class={
+                      isActive
+                        ? "text-forest-700 font-medium transition-colors duration-300 link-underline"
+                        : "text-text-secondary hover:text-forest-700 transition-colors duration-300 link-underline"
+                    }
+                  >
+                    {item.cart ? (
+                      <span class="relative inline-flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="26"
+                          height="26"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="9" cy="20" r="1.4" />
+                          <circle cx="18" cy="20" r="1.4" />
+                          <path d="M2 3h3l2.4 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6" />
+                        </svg>
+                        <span class="sr-only">{item.label}</span>
+                        {(item.count ?? 0) > 0 ? (
+                          <span class="absolute -top-2.5 -right-3.5 min-w-[20px] h-[20px] px-1 rounded-full bg-white border-2 border-[#e60012] text-[#e60012] text-[12px] leading-[16px] text-center font-bold">
+                            {item.count}
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : (
+                      item.label
+                    )}
+                  </a>
+                );
+              })
           }
         </nav>
 
@@ -436,7 +438,40 @@ const nav = [
               <line x1="4" y1="16" x2="20" y2="16"></line>
             </svg>
           </button>
-          <LocaleSwitcher />
+          <div class="flex items-center gap-5">
+            <a
+              href={localizedPath(currentLocale, "/cart")}
+              aria-label={t("nav.cart")}
+              class="hidden md:inline-flex relative items-center text-text-secondary hover:text-forest-700 transition-colors duration-300"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="9" cy="20" r="1.4"></circle>
+                <circle cx="18" cy="20" r="1.4"></circle>
+                <path
+                  d="M2 3h3l2.4 12.2a1 1 0 0 0 1 .8h9.7a1 1 0 0 0 1-.8L21 7H6"
+                ></path>
+              </svg>
+              {
+                cartCount > 0 ? (
+                  <span class="absolute -top-2.5 -right-3.5 min-w-[20px] h-[20px] px-1 rounded-full bg-white border-2 border-[#e60012] text-[#e60012] text-[12px] leading-[16px] text-center font-bold">
+                    {cartCount}
+                  </span>
+                ) : null
+              }
+            </a>
+            <LocaleSwitcher />
+          </div>
         </div>
       </div>
     </header>

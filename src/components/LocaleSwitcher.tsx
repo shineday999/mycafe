@@ -10,6 +10,13 @@ interface Props {
   currentLocale: Locale;
 }
 
+const nativeNames: Record<string, string> = {
+  "zh-Hant": "繁體中文",
+  en: "English",
+  "ms-MY": "Bahasa Melayu",
+  "id-ID": "Bahasa Indonesia",
+};
+
 export default function LocaleSwitcher({ currentLocale }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +53,7 @@ export default function LocaleSwitcher({ currentLocale }: Props) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm font-sans bg-bg-base text-text-primary border border-text-primary/30 rounded-md hover:border-accent-500 hover:text-accent-700 transition-colors shadow-sm"
+        className="flex items-center gap-2 px-3.5 py-2 text-base font-sans bg-bg-base text-text-primary border border-text-primary/30 rounded-md hover:border-accent-500 hover:text-accent-700 transition-colors shadow-sm"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
@@ -63,7 +70,9 @@ export default function LocaleSwitcher({ currentLocale }: Props) {
             d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"
           />
         </svg>
-        <span className="text-text-primary">{localeNames[currentLocale]}</span>
+        <span className="text-text-primary">
+          {nativeNames[currentLocale] ?? localeNames[currentLocale]}
+        </span>
         <svg
           className={`w-3 h-3 text-text-muted transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
@@ -82,7 +91,7 @@ export default function LocaleSwitcher({ currentLocale }: Props) {
       {open && (
         <ul
           role="listbox"
-          className="absolute right-0 mt-2 w-48 bg-bg-elevated border border-text-muted/20 rounded-md shadow-natural-lg overflow-hidden z-50"
+          className="locale-menu absolute right-0 mt-2 min-w-[220px] bg-bg-elevated border border-text-muted/20 rounded-xl shadow-natural-lg overflow-hidden z-50 py-1.5"
         >
           {locales.map((l) => (
             <li key={l}>
@@ -91,16 +100,25 @@ export default function LocaleSwitcher({ currentLocale }: Props) {
                 role="option"
                 aria-selected={l === currentLocale}
                 onClick={() => switchTo(l)}
-                className={`w-full text-left px-4 py-2.5 text-sm font-sans hover:bg-bg-base transition-colors ${
-                  l === currentLocale
-                    ? "bg-bg-base text-accent-700 font-medium"
-                    : "text-text-primary"
-                }`}
+                className="flex w-full items-center justify-between gap-6 text-left px-5 py-3 text-base font-sans hover:bg-bg-base transition-colors"
               >
-                <span className="block">{localeNames[l]}</span>
-                <span className="block text-xs text-text-muted mt-0.5">
-                  {l}
-                </span>
+                <span>{nativeNames[l] ?? localeNames[l]}</span>
+                {l === currentLocale && (
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.2}
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
               </button>
             </li>
           ))}

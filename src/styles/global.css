@@ -515,3 +515,12 @@ main [data-home-hero] .hero-text > p:first-child {
     color: #fff;
   }
 }
+
+/* 語言選單:文字固定深色,不受首頁透明頁首的白字規則影響 */
+header[data-header] .locale-menu button {
+  color: #322216 !important;
+}
+header[data-header] .locale-menu button[aria-selected="true"] {
+  color: #8a4b1f !important;
+  font-weight: 600;
+}

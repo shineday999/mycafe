@@ -18,7 +18,7 @@ const items = readCart(Astro.request.headers.get("cookie"));
 const enriched =
   env?.DB && items.length > 0
     ? await env.DB.prepare(
-        `SELECT p.slug, pv.sku, MIN(pp.amount) AS amount, pp.currency
+        `SELECT p.slug, pv.sku, pv.stock, MIN(pp.amount) AS amount, pp.currency
        FROM products p
        LEFT JOIN product_variants pv ON pv.product_id = p.id
        LEFT JOIN product_prices pp ON pp.variant_id = pv.id AND pp.currency = 'TWD'
@@ -201,7 +201,35 @@ const totalDisplay = formatPrice(subtotalCents, "TWD", locale);
                         {row.sku}
                       </span>
                     ) : null}
-                    × {qty}
+                    <span
+                      data-cart-stepper
+                      class="ml-2 inline-flex items-center gap-1"
+                    >
+                      <button
+                        type="submit"
+                        formaction={`/api/cart/update?slug=${encodeURIComponent(row.slug as string)}&sku=${encodeURIComponent((row.sku as string) ?? "")}&qty=${qty + -1}&next=/checkout`}
+                        formmethod="post"
+                        formnovalidate
+                        disabled={qty <= 1}
+                        aria-label="−"
+                      >
+                        −
+                      </button>
+                      <span data-cart-qty>{qty}</span>
+                      <button
+                        type="submit"
+                        formaction={`/api/cart/update?slug=${encodeURIComponent(row.slug as string)}&sku=${encodeURIComponent((row.sku as string) ?? "")}&qty=${qty + 1}&next=/checkout`}
+                        formmethod="post"
+                        formnovalidate
+                        disabled={
+                          qty >=
+                          ((row.stock as number) ?? Number.POSITIVE_INFINITY)
+                        }
+                        aria-label="+"
+                      >
+                        +
+                      </button>
+                    </span>
                   </span>
                   <span class="font-mono">
                     {formatPrice(

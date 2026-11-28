@@ -55,6 +55,20 @@ export const POST: APIRoute = async (ctx) => {
       (priceRows.results ?? []).map((r) => [r.sku, r.price_cents]),
     );
   }
+  if (skuList.length > 0) {
+    const ph = skuList.map(() => "?").join(",");
+    const st = await db
+      .prepare(`SELECT sku, stock FROM product_variants WHERE sku IN (${ph})`)
+      .bind(...skuList)
+      .all<{ sku: string; stock: number }>();
+    const stockMap = new Map((st.results ?? []).map((r) => [r.sku, r.stock]));
+    const totals = new Map<string, number>();
+    for (const i of items)
+      if (i.sku) totals.set(i.sku, (totals.get(i.sku) ?? 0) + i.qty);
+    for (const [sku, q] of totals)
+      if (q > (stockMap.get(sku) ?? 0))
+        return new Response(`Insufficient stock for ${sku}.`, { status: 400 });
+  }
   const enrichedItems = items.map((i) => ({
     ...i,
     priceCents: i.sku ? (priceMap.get(i.sku) ?? null) : null,
